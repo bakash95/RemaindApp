@@ -17,6 +17,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: Platform.OS == 'android' ? StatusBar.currentHeight : 0,
     flexDirection: 'column',
-    padding: 10
+    paddingLeft : 10,
+    paddingRight : 10
   }
 });

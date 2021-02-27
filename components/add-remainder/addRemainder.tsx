@@ -6,6 +6,9 @@ import DateTimePicker, { Event } from '@react-native-community/datetimepicker'
 import Picker, { Item } from "react-native-picker-select"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
+import { Card, TextInput } from 'react-native-paper'
+
+
 export const Remainder = () => {
     const [remainders, setRemainders] = useState<AddRemainderFormData[]>([]);
 
@@ -85,6 +88,8 @@ const frequencyOptions: Item[] = [{
 
 type AddRemainderFormData = {
     key: string,
+    description?: string,
+    title: string,
     repeat: repeat,
     frequency?: frequency,
     freqNumber?: number,
@@ -108,20 +113,25 @@ export const RemainderList = ({ remainders, refreshRemainder }: { remainders: Ad
     console.log('items to be rendered is', remainders)
     return (
         <FlatList data={remainders} renderItem={({ item }: { item: AddRemainderFormData }) =>
-            <View>
-                <TouchableOpacity onLongPress={() => onDelete(item.key)}>
-                    {
-                        item.repeat == repeat.EVERY ?
-                            <View>
-                                <Text>Duration: Every {item.freqNumber} {item.frequency}</Text>
-                            </View> :
-                            <View>
-                                <Text>Repeat : {item.repeat}</Text>
-                                <Text>Time : {item.time}</Text>
-                            </View>
-                    }
-                </TouchableOpacity>
-            </View>
+            <TouchableOpacity onLongPress={() => onDelete(item.key)}>
+                <Card key={item.key}>
+                    <Card.Title subtitle={item.repeat == repeat.EVERY ? "Remainder" : "Alarm"}
+                        title={item.title}></Card.Title>
+                    <Card.Content style={styles.cardContainer}>
+                        <Text style={styles.cardContentStyle}>{item.description}</Text>
+                        {
+                            item.repeat == repeat.EVERY ?
+                                <View>
+                                    <Text>Duration: Every {item.freqNumber} {item.frequency}</Text>
+                                </View> :
+                                <View>
+                                    <Text>Repeat : {item.repeat}</Text>
+                                    <Text>Time : {item.time}</Text>
+                                </View>
+                        }
+                    </Card.Content>
+                </Card>
+            </TouchableOpacity>
         } />
     )
 }
@@ -158,21 +168,36 @@ const RemainderComp = (props: AddRemainderProps) => {
     const [frequencyValue, setFrequency] = useState<frequency>(frequency.hours);
     const [freqNumber, setFreqNumber] = useState<number>(1);
     const [time, setTime] = useState<Date>(new Date());
+    const [title, setTitle] = useState<string>('remainder');
+    const [description, setDescription] = useState<string>('');
     return (
-        <View >
-            <Picker items={repeatationOptions} value={repatation} onValueChange={setRepeat} />
-            {repatation == repeat.EVERY ? <View>
-                <Picker items={frequencyOptions} value={frequencyValue} onValueChange={(value, index) => { setFreqNumber(1); setFrequency(value) }} />
-                <Picker items={frequencyValue == frequency.minute ? minuteOptions : frequency.hours ? hoursOption : hoursOption}
-                    value={freqNumber} onValueChange={(value, index) => setFreqNumber(value)} />
-            </View> :
-                <View>
-                    <Text>{time.toLocaleTimeString()}</Text>
-                    <DateTimePicker value={time} onChange={(event: any, date?: any): void => setTime(date || new Date())} mode="time" display="clock" />
+        <View style={styles.addRemainderStyle}>
+            <TextInput style={styles.padding} label="title" value={title} onChangeText={setTitle}></TextInput>
+            <TextInput style={styles.padding} label="description" value={description} onChangeText={setDescription}></TextInput>
+            <View style={styles.padding}>
+                <View style={styles.paddingBtm}>
+                    <Picker items={repeatationOptions} value={repatation} onValueChange={setRepeat} />
                 </View>
-            }
-            <TouchableOpacity style={styles.addBtn} onPress={() => {
+                {
+                    repatation == repeat.EVERY ?
+                        <View>
+                            <Picker items={frequencyOptions} value={frequencyValue} onValueChange={(value, index) => { setFreqNumber(1); setFrequency(value) }} />
+                            <Picker items={frequencyValue == frequency.minute ? minuteOptions : frequency.hours ? hoursOption : hoursOption}
+                                value={freqNumber} onValueChange={(value, index) => setFreqNumber(value)} />
+                        </View> :
+                        <View style={styles.customDateContainer}>
+                            <Text style={[styles.datePickerStyle]}>{time.toLocaleString()}</Text>
+                            <View style={[styles.datePickerStyle, styles.customDateContainer]}>
+                                <DatePicker value={time} setTime={setTime} />
+                                <TimePicker value={time} setTime={setTime} />
+                            </View>
+                        </View>
+                }
+            </View>
+            <TouchableOpacity style={[styles.addRemainderBtn, styles.padding]} onPress={() => {
                 let formData: AddRemainderFormData = {
+                    title,
+                    description,
                     frequency: frequencyValue,
                     freqNumber: freqNumber,
                     repeat: repatation,
@@ -185,6 +210,28 @@ const RemainderComp = (props: AddRemainderProps) => {
             </TouchableOpacity>
         </View>
     )
+}
+
+const DatePicker = ({ value, setTime }: { value: Date, setTime: (date: Date) => void }) => {
+    const [isOpen, setOpen] = useState<boolean>(false);
+    return isOpen ? <DateTimePicker
+        value={value}
+        onChange={(event: any, date?: any): void => { setOpen(false); setTime(date || new Date()) }}
+        onTouchCancel={() => setOpen(false)}
+        mode="datetime" />
+        : <Ionicons style={styles.addBtn} name="calendar"
+            size={24} onPress={() => setOpen(!isOpen)} color="green" />
+}
+
+const TimePicker = ({ value, setTime }: { value: Date, setTime: (date: Date) => void }) => {
+    const [isOpen, setOpen] = useState<boolean>(false);
+    return isOpen ? <DateTimePicker
+        value={value}
+        onChange={(event: any, date?: any): void => { setOpen(false); setTime(date || new Date()) }}
+        onTouchCancel={() => setOpen(false)}
+        mode="time" />
+        : <Ionicons style={styles.addBtn} name="time"
+            size={24} onPress={() => setOpen(!isOpen)} color="green" />
 }
 
 const styles = StyleSheet.create({
@@ -200,6 +247,16 @@ const styles = StyleSheet.create({
     addBtn: {
         padding: 15
     },
+    addRemainderBtn: {
+        alignSelf: 'center',
+        borderColor: 'green',
+        borderWidth: 1,
+        textAlign: 'center',
+        padding: 15
+    },
+    paddingBtm: {
+        paddingBottom: 10,
+    },
     closeBtn: {
         backgroundColor: 'red',
         color: 'white'
@@ -207,8 +264,30 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        padding: 20,
+        padding: 10,
         marginStart: 10
+    },
+    cardContainer: {
+        flex: 1,
+        flexDirection: 'column'
+    },
+    cardContentStyle: {
+        paddingBottom: 10
+    },
+    addRemainderStyle: {
+        flexDirection: 'column',
+        justifyContent: 'flex-start'
+    },
+    customDateContainer: {
+        textAlignVertical : 'center',
+        flexDirection: 'row'
+    },
+    datePickerStyle: {
+        paddingLeft: 10
+    },
+    padding: {
+        marginVertical: 10,
+        marginHorizontal: 30
     }
 })
 
