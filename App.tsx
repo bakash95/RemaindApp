@@ -1,21 +1,22 @@
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Remainder } from './components/add-remainder/addRemainder';
 
-export default function App() {
+const App = () => {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaView style={styles.baseContainer}>
+      <Remainder/>
+    </SafeAreaView>
   );
 }
 
+export default App;
+
 const styles = StyleSheet.create({
-  container: {
+  baseContainer: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    marginTop: Platform.OS == 'android' ? StatusBar.currentHeight : 0,
+    flexDirection: 'column',
+    padding: 10
+  }
 });
