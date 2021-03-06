@@ -1,73 +1,14 @@
-import { Ionicons } from "@expo/vector-icons"
-import React, { useCallback, useEffect, useState } from "react"
-import { Modal, View, Text, TouchableOpacity, FlatList } from "react-native"
-
+import { Ionicons } from "@expo/vector-icons";
+import React, { useState, useCallback } from "react";
+import { View, Modal, Text, TouchableOpacity } from "react-native";
+import { TextInput } from 'react-native-paper'
+import { DatePicker } from "../../common/datePicker";
+import { TimePicker } from "../../common/timePicker";
+import { addRemainderToStorage } from "../remainder.storage";
+import { AddRemainderFormData, repeat, frequency, AddRemainderProps, repeatationOptions, frequencyOptions, minuteOptions, hoursOption } from "../remainder.types";
 import Picker from "react-native-picker-select"
 
-import { addRemainderStyles as styles } from './addRemainders.styles';
-
-import { Card, TextInput } from 'react-native-paper'
-
-import * as Notifications from 'expo-notifications'
-import { DailyTriggerInput, DateTriggerInput, NotificationRequestInput, TimeIntervalTriggerInput } from "expo-notifications"
-import { AddRemainderFormData, repeat, frequency, AddRemainderProps, repeatationOptions, frequencyOptions, minuteOptions, hoursOption } from "./remainder.types"
-import { DatePicker } from "../common/datePicker"
-import { TimePicker } from "../common/timePicker"
-import { deleteRemainderInStorageForId, getAndParseRemainderFromStorage, addRemainderToStorage } from "./remainder.storage"
-
-export const Remainder = () => {
-    const [remainders, setRemainders] = useState<AddRemainderFormData[]>([]);
-
-    const refreshRemainder = async () => {
-        let remainders = await getAndParseRemainderFromStorage()
-        setRemainders(remainders)
-    }
-
-    useEffect(() => {
-        refreshRemainder()
-    }, [])
-
-    return (
-        <View style={styles.container}>
-            <RemainderList refreshRemainder={refreshRemainder} remainders={remainders} />
-            <AddRemainder refreshRemainder={refreshRemainder} />
-        </View>
-    )
-}
-
-export const RemainderList = ({ remainders, refreshRemainder }: { remainders: AddRemainderFormData[], refreshRemainder: () => {} }) => {
-    const onDelete = async (keyToDelete: string) => {
-        deleteRemainderInStorageForId(keyToDelete)
-        Notifications.cancelScheduledNotificationAsync(keyToDelete)
-        refreshRemainder();
-    }
-
-    return (
-        <FlatList data={remainders} renderItem={({ item }: { item: AddRemainderFormData }) =>
-            <TouchableOpacity onLongPress={() => onDelete(item.key)}>
-                <Card key={item.key}>
-                    <Card.Title subtitle={item.repeat == repeat.EVERY ? "Remainder" : "Alarm"}
-                        title={item.title}></Card.Title>
-                    <Card.Content style={styles.cardContainer}>
-                        <Text style={styles.cardContentStyle}>{item.description}</Text>
-                        {
-                            item.repeat == repeat.EVERY ?
-                                <View>
-                                    <Text>Duration: Every {item.frequency == frequency.hours ? item.freqNumber / (60 * 60) :
-                                        item.frequency == frequency.minute ? item.freqNumber / 60 :
-                                            item.frequency == frequency.days ? item.freqNumber / (60 * 60 * 24) : 0} {item.frequency}</Text>
-                                </View> :
-                                <View>
-                                    <Text>Repeat : {item.repeat}</Text>
-                                    <Text>Time : {item.time}</Text>
-                                </View>
-                        }
-                    </Card.Content>
-                </Card>
-            </TouchableOpacity>
-        } />
-    )
-}
+import { addRemainderStyles as styles } from '../addRemainders.styles';
 
 export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} }) => {
     const [isAddModalOpen, setAddModalOpen] = useState<boolean>(false);
@@ -77,35 +18,6 @@ export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} 
         addRemainderToStorage(data)
         setModalClose()
         refreshRemainder();
-        let notificationRepeatTrigger: TimeIntervalTriggerInput = {
-            repeats: data.repeat == repeat.EVERY,
-            seconds: data.freqNumber
-        }
-
-        let dailyTrigger: DailyTriggerInput = {
-            repeats: true,
-            hour: data.time.getHours(),
-            minute: data.time.getMinutes()
-        }
-
-        let notificationDateTrigger: DateTriggerInput = {
-            date: data.time
-        }
-
-        let notification: NotificationRequestInput = {
-            identifier: data.key,
-            content: {
-                body: data.description,
-                title: data.title,
-                sound: true,
-                vibrate: [0, 250, 250, 250]
-            },
-            trigger: data.repeat == repeat.EVERY ?
-                data.frequency == frequency.days ? dailyTrigger :
-                    notificationRepeatTrigger : notificationDateTrigger
-        }
-
-        Notifications.scheduleNotificationAsync(notification)
     }
 
     return (

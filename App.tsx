@@ -1,11 +1,11 @@
 import React from 'react';
-import { Platform, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native';
-import { Remainder } from './components/add-remainder/addRemainder';
+import { Platform, SafeAreaView, StatusBar, StyleSheet } from 'react-native';
+import { Remainder } from './components/remainder/addRemainder';
 
 const App = () => {
   return (
     <SafeAreaView style={styles.baseContainer}>
-      <Remainder/>
+      <Remainder />
     </SafeAreaView>
   );
 }
@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: Platform.OS == 'android' ? StatusBar.currentHeight : 0,
     flexDirection: 'column',
-    paddingLeft : 10,
-    paddingRight : 10
+    paddingLeft: 10,
+    paddingRight: 10
   }
 });
