@@ -1,28 +1,25 @@
 import { Ionicons } from "@expo/vector-icons"
 import React, { useCallback, useEffect, useState } from "react"
-import { Modal, StyleSheet, View, Text, TouchableOpacity, FlatList } from "react-native"
+import { Modal, View, Text, TouchableOpacity, FlatList } from "react-native"
 
-import DateTimePicker from '@react-native-community/datetimepicker'
 import Picker from "react-native-picker-select"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+
+import { addRemainderStyles as styles } from './addRemainders.styles';
 
 import { Card, TextInput } from 'react-native-paper'
 
 import * as Notifications from 'expo-notifications'
 import { DailyTriggerInput, DateTriggerInput, NotificationRequestInput, TimeIntervalTriggerInput } from "expo-notifications"
-import { AddRemainderFormData, repeat, frequency, AddRemainderProps, repeatationOptions, frequencyOptions, minuteOptions, hoursOption } from "./remainde.types"
-
-const REMAINDER_CONST = 'remainder'
+import { AddRemainderFormData, repeat, frequency, AddRemainderProps, repeatationOptions, frequencyOptions, minuteOptions, hoursOption } from "./remainder.types"
+import { DatePicker } from "../common/datePicker"
+import { TimePicker } from "../common/timePicker"
+import { deleteRemainderInStorageForId, getAndParseRemainderFromStorage, addRemainderToStorage } from "./remainder.storage"
 
 export const Remainder = () => {
     const [remainders, setRemainders] = useState<AddRemainderFormData[]>([]);
 
     const refreshRemainder = async () => {
-        let remainderPromise = await AsyncStorage.getItem(REMAINDER_CONST);
-        if (!remainderPromise) {
-            remainderPromise = ''
-        }
-        let remainders = JSON.parse(remainderPromise) || [];
+        let remainders = await getAndParseRemainderFromStorage()
         setRemainders(remainders)
     }
 
@@ -40,9 +37,7 @@ export const Remainder = () => {
 
 export const RemainderList = ({ remainders, refreshRemainder }: { remainders: AddRemainderFormData[], refreshRemainder: () => {} }) => {
     const onDelete = async (keyToDelete: string) => {
-        let remainders: AddRemainderFormData[] = await getExistingRemainders()
-        remainders = remainders.filter((remainder) => remainder.key !== keyToDelete);
-        AsyncStorage.setItem(REMAINDER_CONST, JSON.stringify(remainders))
+        deleteRemainderInStorageForId(keyToDelete)
         Notifications.cancelScheduledNotificationAsync(keyToDelete)
         refreshRemainder();
     }
@@ -79,9 +74,7 @@ export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} 
     const setModalClose = useCallback(() => setAddModalOpen(!isAddModalOpen), [isAddModalOpen]);
 
     const submitRemainder = async (data: AddRemainderFormData) => {
-        let remainders: AddRemainderFormData[] = await getExistingRemainders()
-        remainders.push(data)
-        AsyncStorage.setItem(REMAINDER_CONST, JSON.stringify(remainders))
+        addRemainderToStorage(data)
         setModalClose()
         refreshRemainder();
         let notificationRepeatTrigger: TimeIntervalTriggerInput = {
@@ -196,96 +189,4 @@ const RemainderComp = (props: AddRemainderProps) => {
             </TouchableOpacity>
         </View>
     )
-}
-
-const DatePicker = ({ value, setTime }: { value: Date, setTime: (date: Date) => void }) => {
-    const [isOpen, setOpen] = useState<boolean>(false);
-    return isOpen ? <DateTimePicker
-        value={value}
-        onChange={(event: any, date?: any): void => { setOpen(false); setTime(date || new Date()) }}
-        onTouchCancel={() => setOpen(false)}
-        mode="datetime" />
-        : <Ionicons style={styles.addBtn} name="calendar"
-            size={24} onPress={() => setOpen(!isOpen)} color="green" />
-}
-
-const TimePicker = ({ value, setTime }: { value: Date, setTime: (date: Date) => void }) => {
-    const [isOpen, setOpen] = useState<boolean>(false);
-    return isOpen ? <DateTimePicker
-        value={value}
-        onChange={(event: any, date?: any): void => { setOpen(false); setTime(date || new Date()) }}
-        onTouchCancel={() => setOpen(false)}
-        mode="time" />
-        : <Ionicons style={styles.addBtn} name="time"
-            size={24} onPress={() => setOpen(!isOpen)} color="green" />
-}
-
-const styles = StyleSheet.create({
-    addBtnContainer: {
-        alignSelf: 'flex-end'
-    },
-    modalStyles: {
-        flex: 1,
-        justifyContent: 'center',
-        alignContent: 'center',
-        flexDirection: 'column'
-    },
-    addBtn: {
-        padding: 15
-    },
-    addRemainderBtn: {
-        alignSelf: 'center',
-        borderColor: 'green',
-        borderWidth: 1,
-        textAlign: 'center',
-        padding: 15
-    },
-    paddingBtm: {
-        paddingBottom: 10,
-    },
-    closeBtn: {
-        backgroundColor: 'red',
-        color: 'white'
-    },
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        padding: 10,
-        marginStart: 10
-    },
-    cardContainer: {
-        flex: 1,
-        flexDirection: 'column'
-    },
-    cardContentStyle: {
-        paddingBottom: 10
-    },
-    addRemainderStyle: {
-        flexDirection: 'column',
-        justifyContent: 'flex-start'
-    },
-    customDateContainer: {
-        paddingLeft: 10,
-        textAlignVertical: 'center',
-        flexDirection: 'row'
-    },
-    datePickerStyle: {
-        paddingLeft: 10
-    },
-    centerText: {
-        alignSelf: 'center'
-    },
-    padding: {
-        marginVertical: 10,
-        marginHorizontal: 30
-    }
-})
-
-async function getExistingRemainders() {
-    let remainderPromise = await AsyncStorage.getItem(REMAINDER_CONST) || ''
-    let remainders: AddRemainderFormData[] = []
-    if (remainderPromise) {
-        remainders = JSON.parse(remainderPromise)
-    }
-    return remainders
 }
