@@ -5,11 +5,12 @@ import { AddRemainderFormData } from "./remainder.types";
 const REMAINDER_CONST = 'remainder'
 
 export const getAndParseRemainderFromStorage = async () => {
-    let remainderPromise = await AsyncStorage.getItem(REMAINDER_CONST) || ''
     let remainders: AddRemainderFormData[] = []
+    let remainderPromise = await AsyncStorage.getItem(REMAINDER_CONST) || ''
     if (remainderPromise) {
         remainders = JSON.parse(remainderPromise)
     }
+    console.log('list',remainders)
     return remainders
 }
 

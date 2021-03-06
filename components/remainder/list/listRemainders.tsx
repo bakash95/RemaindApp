@@ -7,6 +7,7 @@ import { FlatList, TouchableOpacity, View, Text } from "react-native";
 import { addRemainderStyles as styles } from '../addRemainders.styles'
 
 import i18n from 'i18n-js'
+import moment from 'moment'
 
 export const RemainderList = ({ remainders, refreshRemainder }: { remainders: AddRemainderFormData[], refreshRemainder: () => {} }) => {
     const onDelete = async (keyToDelete: string) => {
@@ -21,7 +22,7 @@ export const RemainderList = ({ remainders, refreshRemainder }: { remainders: Ad
                     <Card.Title subtitle={item.repeat == repeat.EVERY ? i18n.t('remainder') : i18n.t('alarm')}
                         title={item.title}></Card.Title>
                     <Card.Content style={styles.cardContainer}>
-                        <Text style={styles.cardContentStyle}>{item.description}</Text>
+                        <Text>{item.description}</Text>
                         {
                             item.repeat == repeat.EVERY ?
                                 <View>
@@ -30,8 +31,8 @@ export const RemainderList = ({ remainders, refreshRemainder }: { remainders: Ad
                                             item.frequency == frequency.days ? item.freqNumber / (60 * 60 * 24) : 0} {item.frequency}</Text>
                                 </View> :
                                 <View>
-                                    <Text>{i18n.t('repeat')} {item.repeat}</Text>
-                                    <Text>{i18n.t('time')} {item.time}</Text>
+                                    <Text style={styles.cardContentStyle}>{i18n.t('repeat')} {item.repeat}</Text>
+                                    <Text>{i18n.t('time')} {moment(item.time).format('llll')}</Text>
                                 </View>
                         }
                     </Card.Content>

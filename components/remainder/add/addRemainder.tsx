@@ -5,6 +5,9 @@ import { DatePicker, TimePicker, SelectField, TextInputComp } from "../../common
 import { addRemainderToStorage } from "../remainder.storage";
 import { AddRemainderFormData, repeat, frequency, AddRemainderProps, repeatationOptions, frequencyOptions, minuteOptions, hoursOption } from "../remainder.types";
 
+import i18n from 'i18n-js'
+import moment from 'moment'
+
 import { addRemainderStyles as styles } from '../addRemainders.styles';
 
 export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} }) => {
@@ -12,7 +15,7 @@ export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} 
     const setModalClose = useCallback(() => setAddModalOpen(!isAddModalOpen), [isAddModalOpen]);
 
     const submitRemainder = async (data: AddRemainderFormData) => {
-        addRemainderToStorage(data)
+        await addRemainderToStorage(data)
         setModalClose()
         refreshRemainder();
     }
@@ -36,12 +39,12 @@ const RemainderComp = (props: AddRemainderProps) => {
     const [frequencyValue, setFrequency] = useState<frequency>(frequency.hours);
     const [freqNumber, setFreqNumber] = useState<number>(1);
     const [time, setTime] = useState<Date>(new Date());
-    const [title, setTitle] = useState<string>('remainder');
+    const [title, setTitle] = useState<string>(i18n.t('remainder'));
     const [description, setDescription] = useState<string>('');
     return (
         <View style={styles.addRemainderStyle}>
-            <TextInputComp style={styles.padding} label="title" value={title} onChangeText={setTitle}></TextInputComp>
-            <TextInputComp style={styles.padding} label="description" value={description} onChangeText={setDescription}></TextInputComp>
+            <TextInputComp style={styles.padding} label={i18n.t('title')} value={title} onChangeText={setTitle}></TextInputComp>
+            <TextInputComp style={styles.padding} label={i18n.t('description')} value={description} onChangeText={setDescription}></TextInputComp>
             <View style={styles.padding}>
                 <View style={styles.paddingBtm}>
                     <SelectField items={repeatationOptions} value={repatation}
@@ -50,13 +53,14 @@ const RemainderComp = (props: AddRemainderProps) => {
                 {
                     repatation == repeat.EVERY ?
                         <View>
-                            <SelectField items={frequencyOptions} value={frequencyValue} onValueChange={(value, index) => { setFreqNumber(1); setFrequency(value) }} />
+                            <SelectField items={frequencyOptions} value={frequencyValue}
+                                onValueChange={(value, index) => { setFreqNumber(1); setFrequency(value) }} />
                             <SelectField items={frequencyValue == frequency.minute ? minuteOptions : frequency.hours ? hoursOption : hoursOption}
                                 value={freqNumber} onValueChange={(value, index) => setFreqNumber(value)} />
                             {
                                 frequencyValue == frequency.days &&
                                 <View style={[styles.customDateContainer]}>
-                                    <Text style={[styles.centerText]}>{time.toLocaleString()}</Text>
+                                    <Text style={[styles.centerText]}>{moment(time).format('llll')}</Text>
                                     <DatePicker value={time} setTime={setTime} />
                                     <TimePicker value={time} setTime={setTime} />
                                 </View>
@@ -64,7 +68,7 @@ const RemainderComp = (props: AddRemainderProps) => {
                         </View> :
                         repatation == repeat.ONE_TIME ?
                             <View style={[styles.customDateContainer]}>
-                                <Text style={[styles.centerText]}>{time.toLocaleString()}</Text>
+                                <Text style={[styles.centerText]}>{moment(time).format('llll')}</Text>
                                 <DatePicker value={time} setTime={setTime} />
                                 <TimePicker value={time} setTime={setTime} />
                             </View> :
@@ -95,7 +99,7 @@ const RemainderComp = (props: AddRemainderProps) => {
                 }
                 props.onSubmit(formData)
             }} >
-                <Text>Add Remainder</Text>
+                <Text>{i18n.t('addremainder')}</Text>
             </TouchableOpacity>
         </View>
     )
