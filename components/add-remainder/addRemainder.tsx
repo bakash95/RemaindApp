@@ -9,7 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Card, TextInput } from 'react-native-paper'
 
 import * as Notifications from 'expo-notifications'
-import { DateTriggerInput, NotificationRequestInput, TimeIntervalTriggerInput } from "expo-notifications"
+import { DailyTriggerInput, DateTriggerInput, NotificationRequestInput, TimeIntervalTriggerInput } from "expo-notifications"
 
 const REMAINDER_CONST = 'remainder'
 
@@ -39,7 +39,8 @@ export const Remainder = () => {
 
 enum repeat {
     ONE_TIME = "ONE_TIME",
-    EVERY = "EVERY"
+    EVERY = "EVERY",
+    TIMER = "TIMER"
 }
 
 enum frequency {
@@ -58,6 +59,11 @@ const repeatationOptions: Item[] = [{
     value: repeat.EVERY,
     key: repeat.EVERY
 },
+{
+    label: 'timer',
+    value: repeat.TIMER,
+    key: repeat.TIMER
+}
 ]
 
 const minuteOptions: Item[] = []
@@ -159,6 +165,12 @@ export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} 
             seconds: data.freqNumber
         }
 
+        let dailyTrigger: DailyTriggerInput = {
+            repeats: true,
+            hour: data.time.getHours(),
+            minute: data.time.getMinutes()
+        }
+
         let notificationDateTrigger: DateTriggerInput = {
             date: data.time
         }
@@ -167,9 +179,13 @@ export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} 
             identifier: data.key,
             content: {
                 body: data.description,
-                title: data.title
+                title: data.title,
+                sound: true,
+                vibrate: [0, 250, 250, 250]
             },
-            trigger: data.repeat == repeat.EVERY ? notificationRepeatTrigger : notificationDateTrigger
+            trigger: data.repeat == repeat.EVERY ?
+                data.frequency == frequency.days ? dailyTrigger :
+                    notificationRepeatTrigger : notificationDateTrigger
         }
 
         Notifications.scheduleNotificationAsync(notification)
@@ -210,14 +226,25 @@ const RemainderComp = (props: AddRemainderProps) => {
                             <Picker items={frequencyOptions} value={frequencyValue} onValueChange={(value, index) => { setFreqNumber(1); setFrequency(value) }} />
                             <Picker items={frequencyValue == frequency.minute ? minuteOptions : frequency.hours ? hoursOption : hoursOption}
                                 value={freqNumber} onValueChange={(value, index) => setFreqNumber(value)} />
+                            {
+                                frequencyValue == frequency.days &&
+                                <View style={[styles.customDateContainer]}>
+                                    <Text style={[styles.centerText]}>{time.toLocaleString()}</Text>
+                                    <DatePicker value={time} setTime={setTime} />
+                                    <TimePicker value={time} setTime={setTime} />
+                                </View>
+                            }
                         </View> :
-                        <View style={styles.customDateContainer}>
-                            <Text style={[styles.datePickerStyle]}>{time.toLocaleString()}</Text>
-                            <View style={[styles.datePickerStyle, styles.customDateContainer]}>
+                        repatation == repeat.ONE_TIME ?
+                            <View style={[styles.customDateContainer]}>
+                                <Text style={[styles.centerText]}>{time.toLocaleString()}</Text>
                                 <DatePicker value={time} setTime={setTime} />
                                 <TimePicker value={time} setTime={setTime} />
+                            </View> :
+                            <View>
+                                <Picker items={minuteOptions}
+                                    value={freqNumber} onValueChange={(value, index) => setFreqNumber(value)} />
                             </View>
-                        </View>
                 }
             </View>
             <TouchableOpacity style={[styles.addRemainderBtn, styles.padding]} onPress={() => {
@@ -226,7 +253,9 @@ const RemainderComp = (props: AddRemainderProps) => {
                 if (repatation == repeat.EVERY) {
                     freqNumberSeconds = frequencyValue == frequency.minute ? freqNumber * 60 :
                         frequencyValue == frequency.hours ?
-                            freqNumber * 60 * 60 : freqNumber * 60 * 60 * 24
+                            freqNumber * 60 * 60 : 0
+                } else if (repatation == repeat.TIMER) {
+                    currDate.setMinutes(currDate.getMinutes() + freqNumber);
                 }
                 let formData: AddRemainderFormData = {
                     title,
@@ -312,11 +341,15 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start'
     },
     customDateContainer: {
+        paddingLeft: 10,
         textAlignVertical: 'center',
         flexDirection: 'row'
     },
     datePickerStyle: {
         paddingLeft: 10
+    },
+    centerText: {
+        alignSelf: 'center'
     },
     padding: {
         marginVertical: 10,
