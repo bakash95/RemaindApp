@@ -2,7 +2,11 @@ import React from 'react';
 import { Platform, SafeAreaView, StatusBar, StyleSheet } from 'react-native';
 import { Remainder } from './components/remainder/addRemainder';
 
+import { locale } from 'expo-localization'
+import i18n from 'i18n-js'
+
 const App = () => {
+  i18n.locale = locale
   return (
     <SafeAreaView style={styles.baseContainer}>
       <Remainder />
