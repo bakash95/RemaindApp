@@ -1,12 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState, useCallback } from "react";
 import { View, Modal, Text, TouchableOpacity } from "react-native";
-import { TextInput } from 'react-native-paper'
-import { DatePicker } from "../../common/datePicker";
-import { TimePicker } from "../../common/timePicker";
+import { DatePicker, TimePicker, SelectField, TextInputComp } from "../../common";
 import { addRemainderToStorage } from "../remainder.storage";
 import { AddRemainderFormData, repeat, frequency, AddRemainderProps, repeatationOptions, frequencyOptions, minuteOptions, hoursOption } from "../remainder.types";
-import Picker from "react-native-picker-select"
 
 import { addRemainderStyles as styles } from '../addRemainders.styles';
 
@@ -43,17 +40,18 @@ const RemainderComp = (props: AddRemainderProps) => {
     const [description, setDescription] = useState<string>('');
     return (
         <View style={styles.addRemainderStyle}>
-            <TextInput style={styles.padding} label="title" value={title} onChangeText={setTitle}></TextInput>
-            <TextInput style={styles.padding} label="description" value={description} onChangeText={setDescription}></TextInput>
+            <TextInputComp style={styles.padding} label="title" value={title} onChangeText={setTitle}></TextInputComp>
+            <TextInputComp style={styles.padding} label="description" value={description} onChangeText={setDescription}></TextInputComp>
             <View style={styles.padding}>
                 <View style={styles.paddingBtm}>
-                    <Picker items={repeatationOptions} value={repatation} onValueChange={setRepeat} />
+                    <SelectField items={repeatationOptions} value={repatation}
+                        onValueChange={setRepeat} />
                 </View>
                 {
                     repatation == repeat.EVERY ?
                         <View>
-                            <Picker items={frequencyOptions} value={frequencyValue} onValueChange={(value, index) => { setFreqNumber(1); setFrequency(value) }} />
-                            <Picker items={frequencyValue == frequency.minute ? minuteOptions : frequency.hours ? hoursOption : hoursOption}
+                            <SelectField items={frequencyOptions} value={frequencyValue} onValueChange={(value, index) => { setFreqNumber(1); setFrequency(value) }} />
+                            <SelectField items={frequencyValue == frequency.minute ? minuteOptions : frequency.hours ? hoursOption : hoursOption}
                                 value={freqNumber} onValueChange={(value, index) => setFreqNumber(value)} />
                             {
                                 frequencyValue == frequency.days &&
@@ -71,7 +69,7 @@ const RemainderComp = (props: AddRemainderProps) => {
                                 <TimePicker value={time} setTime={setTime} />
                             </View> :
                             <View>
-                                <Picker items={minuteOptions}
+                                <SelectField items={minuteOptions}
                                     value={freqNumber} onValueChange={(value, index) => setFreqNumber(value)} />
                             </View>
                 }
