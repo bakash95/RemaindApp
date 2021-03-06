@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons"
 import React, { useCallback, useEffect, useState } from "react"
 import { Modal, StyleSheet, View, Text, TouchableOpacity, FlatList } from "react-native"
 
-import DateTimePicker, { Event } from '@react-native-community/datetimepicker'
+import DateTimePicker from '@react-native-community/datetimepicker'
 import Picker, { Item } from "react-native-picker-select"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
@@ -11,11 +11,13 @@ import { Card, TextInput } from 'react-native-paper'
 import * as Notifications from 'expo-notifications'
 import { DateTriggerInput, NotificationRequestInput, TimeIntervalTriggerInput } from "expo-notifications"
 
+const REMAINDER_CONST = 'remainder'
+
 export const Remainder = () => {
     const [remainders, setRemainders] = useState<AddRemainderFormData[]>([]);
 
     const refreshRemainder = async () => {
-        let remainderPromise = await AsyncStorage.getItem('remainder');
+        let remainderPromise = await AsyncStorage.getItem(REMAINDER_CONST);
         if (!remainderPromise) {
             remainderPromise = ''
         }
@@ -110,7 +112,7 @@ export const RemainderList = ({ remainders, refreshRemainder }: { remainders: Ad
     const onDelete = async (keyToDelete: string) => {
         let remainders: AddRemainderFormData[] = await getExistingRemainders()
         remainders = remainders.filter((remainder) => remainder.key !== keyToDelete);
-        AsyncStorage.setItem('remainder', JSON.stringify(remainders))
+        AsyncStorage.setItem(REMAINDER_CONST, JSON.stringify(remainders))
         Notifications.cancelScheduledNotificationAsync(keyToDelete)
         refreshRemainder();
     }
@@ -149,7 +151,7 @@ export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} 
     const submitRemainder = async (data: AddRemainderFormData) => {
         let remainders: AddRemainderFormData[] = await getExistingRemainders()
         remainders.push(data)
-        AsyncStorage.setItem('remainder', JSON.stringify(remainders))
+        AsyncStorage.setItem(REMAINDER_CONST, JSON.stringify(remainders))
         setModalClose()
         refreshRemainder();
         let notificationRepeatTrigger: TimeIntervalTriggerInput = {
@@ -323,7 +325,7 @@ const styles = StyleSheet.create({
 })
 
 async function getExistingRemainders() {
-    let remainderPromise = await AsyncStorage.getItem('remainder') || ''
+    let remainderPromise = await AsyncStorage.getItem(REMAINDER_CONST) || ''
     let remainders: AddRemainderFormData[] = []
     if (remainderPromise) {
         remainders = JSON.parse(remainderPromise)
