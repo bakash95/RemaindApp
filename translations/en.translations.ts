@@ -5,7 +5,8 @@ const enTranslations = {
     time : "Time :",
     addremainder : "Add Remainder",
     title : "Title",
-    description : "Description"
+    description : "Description",
+    timer : "Timer"
 }
 
 export default enTranslations

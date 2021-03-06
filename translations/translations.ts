@@ -4,7 +4,6 @@ import { locale } from 'expo-localization'
 import moment from 'moment'
 
 export const initTranslations = () => {
-    console.log('locale', locale)
     i18n.fallbacks = true
     i18n.locale = locale
     moment.locale(locale)

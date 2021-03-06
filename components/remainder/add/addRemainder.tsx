@@ -58,12 +58,11 @@ const RemainderComp = (props: AddRemainderProps) => {
                             <SelectField items={frequencyValue == frequency.minute ? minuteOptions : frequency.hours ? hoursOption : hoursOption}
                                 value={freqNumber} onValueChange={(value, index) => setFreqNumber(value)} />
                             {
-                                frequencyValue == frequency.days &&
+                                frequencyValue == frequency.days ?
                                 <View style={[styles.customDateContainer]}>
-                                    <Text style={[styles.centerText]}>{moment(time).format('llll')}</Text>
-                                    <DatePicker value={time} setTime={setTime} />
+                                    <Text style={[styles.centerText]}>{moment(time).format('hh:mm:ss A')}</Text>
                                     <TimePicker value={time} setTime={setTime} />
-                                </View>
+                                </View> : null
                             }
                         </View> :
                         repatation == repeat.ONE_TIME ?
@@ -84,7 +83,7 @@ const RemainderComp = (props: AddRemainderProps) => {
                 if (repatation == repeat.EVERY) {
                     freqNumberSeconds = frequencyValue == frequency.minute ? freqNumber * 60 :
                         frequencyValue == frequency.hours ?
-                            freqNumber * 60 * 60 : 0
+                            freqNumber * 60 * 60 : freqNumber * 60 * 60 * 24
                 } else if (repatation == repeat.TIMER) {
                     currDate.setMinutes(currDate.getMinutes() + freqNumber);
                 }

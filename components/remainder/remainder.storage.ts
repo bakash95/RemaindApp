@@ -10,7 +10,6 @@ export const getAndParseRemainderFromStorage = async () => {
     if (remainderPromise) {
         remainders = JSON.parse(remainderPromise)
     }
-    console.log('list',remainders)
     return remainders
 }
 
