@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons"
-import React, { useCallback, useEffect, useLayoutEffect, useState } from "react"
-import { Modal, StyleSheet, View, Text, Button, TouchableOpacity, FlatList } from "react-native"
+import React, { useCallback, useEffect, useState } from "react"
+import { Modal, StyleSheet, View, Text, TouchableOpacity, FlatList } from "react-native"
 
 import DateTimePicker, { Event } from '@react-native-community/datetimepicker'
 import Picker, { Item } from "react-native-picker-select"
@@ -8,6 +8,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 
 import { Card, TextInput } from 'react-native-paper'
 
+import * as Notifications from 'expo-notifications'
+import { DateTriggerInput, NotificationRequestInput, TimeIntervalTriggerInput } from "expo-notifications"
 
 export const Remainder = () => {
     const [remainders, setRemainders] = useState<AddRemainderFormData[]>([]);
@@ -19,7 +21,6 @@ export const Remainder = () => {
         }
         let remainders = JSON.parse(remainderPromise) || [];
         setRemainders(remainders)
-        console.log("remainder list from storage", remainders)
     }
 
     useEffect(() => {
@@ -40,9 +41,9 @@ enum repeat {
 }
 
 enum frequency {
-    minute = "minutes",
-    hours = "hours",
-    days = "days"
+    minute = "minute",
+    hours = "hour",
+    days = "day"
 }
 
 const repeatationOptions: Item[] = [{
@@ -76,14 +77,19 @@ for (let i = 1; i < 24; i++) {
 }
 
 const frequencyOptions: Item[] = [{
-    label: 'minute',
-    value: "minute",
-    key: 'minute'
+    label: frequency.minute,
+    value: frequency.minute,
+    key: frequency.minute
 },
 {
-    label: 'hours',
-    value: "hours",
-    key: 'hours'
+    label: frequency.hours,
+    value: frequency.hours,
+    key: frequency.hours
+},
+{
+    label: frequency.days,
+    value: frequency.days,
+    key: frequency.days
 }]
 
 type AddRemainderFormData = {
@@ -92,8 +98,8 @@ type AddRemainderFormData = {
     title: string,
     repeat: repeat,
     frequency?: frequency,
-    freqNumber?: number,
-    time?: Date
+    freqNumber: number,
+    time: Date
 }
 
 type AddRemainderProps = {
@@ -101,16 +107,14 @@ type AddRemainderProps = {
 }
 
 export const RemainderList = ({ remainders, refreshRemainder }: { remainders: AddRemainderFormData[], refreshRemainder: () => {} }) => {
-
     const onDelete = async (keyToDelete: string) => {
         let remainders: AddRemainderFormData[] = await getExistingRemainders()
-        console.log('delete called on key', keyToDelete)
         remainders = remainders.filter((remainder) => remainder.key !== keyToDelete);
         AsyncStorage.setItem('remainder', JSON.stringify(remainders))
+        Notifications.cancelScheduledNotificationAsync(keyToDelete)
         refreshRemainder();
     }
 
-    console.log('items to be rendered is', remainders)
     return (
         <FlatList data={remainders} renderItem={({ item }: { item: AddRemainderFormData }) =>
             <TouchableOpacity onLongPress={() => onDelete(item.key)}>
@@ -122,7 +126,9 @@ export const RemainderList = ({ remainders, refreshRemainder }: { remainders: Ad
                         {
                             item.repeat == repeat.EVERY ?
                                 <View>
-                                    <Text>Duration: Every {item.freqNumber} {item.frequency}</Text>
+                                    <Text>Duration: Every {item.frequency == frequency.hours ? item.freqNumber / (60 * 60) :
+                                        item.frequency == frequency.minute ? item.freqNumber / 60 :
+                                            item.frequency == frequency.days ? item.freqNumber / (60 * 60 * 24) : 0} {item.frequency}</Text>
                                 </View> :
                                 <View>
                                     <Text>Repeat : {item.repeat}</Text>
@@ -143,10 +149,28 @@ export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} 
     const submitRemainder = async (data: AddRemainderFormData) => {
         let remainders: AddRemainderFormData[] = await getExistingRemainders()
         remainders.push(data)
-        console.log("data to be saved after add", remainders)
         AsyncStorage.setItem('remainder', JSON.stringify(remainders))
         setModalClose()
         refreshRemainder();
+        let notificationRepeatTrigger: TimeIntervalTriggerInput = {
+            repeats: data.repeat == repeat.EVERY,
+            seconds: data.freqNumber
+        }
+
+        let notificationDateTrigger: DateTriggerInput = {
+            date: data.time
+        }
+
+        let notification: NotificationRequestInput = {
+            identifier: data.key,
+            content: {
+                body: data.description,
+                title: data.title
+            },
+            trigger: data.repeat == repeat.EVERY ? notificationRepeatTrigger : notificationDateTrigger
+        }
+
+        Notifications.scheduleNotificationAsync(notification)
     }
 
     return (
@@ -195,14 +219,21 @@ const RemainderComp = (props: AddRemainderProps) => {
                 }
             </View>
             <TouchableOpacity style={[styles.addRemainderBtn, styles.padding]} onPress={() => {
+                let currDate = time;
+                let freqNumberSeconds = 0
+                if (repatation == repeat.EVERY) {
+                    freqNumberSeconds = frequencyValue == frequency.minute ? freqNumber * 60 :
+                        frequencyValue == frequency.hours ?
+                            freqNumber * 60 * 60 : freqNumber * 60 * 60 * 24
+                }
                 let formData: AddRemainderFormData = {
                     title,
                     description,
                     frequency: frequencyValue,
-                    freqNumber: freqNumber,
+                    freqNumber: freqNumberSeconds,
                     repeat: repatation,
-                    time,
-                    key: new Date().getTime().toString()
+                    time: currDate,
+                    key: currDate.getTime().toString()
                 }
                 props.onSubmit(formData)
             }} >
@@ -279,7 +310,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start'
     },
     customDateContainer: {
-        textAlignVertical : 'center',
+        textAlignVertical: 'center',
         flexDirection: 'row'
     },
     datePickerStyle: {
@@ -293,7 +324,6 @@ const styles = StyleSheet.create({
 
 async function getExistingRemainders() {
     let remainderPromise = await AsyncStorage.getItem('remainder') || ''
-    console.log('added remainder', remainderPromise)
     let remainders: AddRemainderFormData[] = []
     if (remainderPromise) {
         remainders = JSON.parse(remainderPromise)
