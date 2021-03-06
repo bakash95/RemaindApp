@@ -3,13 +3,14 @@ import React, { useCallback, useEffect, useState } from "react"
 import { Modal, StyleSheet, View, Text, TouchableOpacity, FlatList } from "react-native"
 
 import DateTimePicker from '@react-native-community/datetimepicker'
-import Picker, { Item } from "react-native-picker-select"
+import Picker from "react-native-picker-select"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
 import { Card, TextInput } from 'react-native-paper'
 
 import * as Notifications from 'expo-notifications'
 import { DailyTriggerInput, DateTriggerInput, NotificationRequestInput, TimeIntervalTriggerInput } from "expo-notifications"
+import { AddRemainderFormData, repeat, frequency, AddRemainderProps, repeatationOptions, frequencyOptions, minuteOptions, hoursOption } from "./remainde.types"
 
 const REMAINDER_CONST = 'remainder'
 
@@ -35,83 +36,6 @@ export const Remainder = () => {
             <AddRemainder refreshRemainder={refreshRemainder} />
         </View>
     )
-}
-
-enum repeat {
-    ONE_TIME = "ONE_TIME",
-    EVERY = "EVERY",
-    TIMER = "TIMER"
-}
-
-enum frequency {
-    minute = "minute",
-    hours = "hour",
-    days = "day"
-}
-
-const repeatationOptions: Item[] = [{
-    label: 'one time',
-    value: repeat.ONE_TIME,
-    key: repeat.ONE_TIME
-},
-{
-    label: 'every',
-    value: repeat.EVERY,
-    key: repeat.EVERY
-},
-{
-    label: 'timer',
-    value: repeat.TIMER,
-    key: repeat.TIMER
-}
-]
-
-const minuteOptions: Item[] = []
-for (let i = 1; i < 60; i++) {
-    minuteOptions.push({
-        label: `${i}`,
-        value: i,
-        key: i
-    })
-}
-
-const hoursOption: Item[] = []
-for (let i = 1; i < 24; i++) {
-    hoursOption.push({
-        label: `${i}`,
-        value: i,
-        key: i
-    })
-}
-
-const frequencyOptions: Item[] = [{
-    label: frequency.minute,
-    value: frequency.minute,
-    key: frequency.minute
-},
-{
-    label: frequency.hours,
-    value: frequency.hours,
-    key: frequency.hours
-},
-{
-    label: frequency.days,
-    value: frequency.days,
-    key: frequency.days
-}]
-
-type AddRemainderFormData = {
-    key: string,
-    description?: string,
-    title: string,
-    repeat: repeat,
-    frequency?: frequency,
-    freqNumber: number,
-    time: Date
-}
-
-type AddRemainderProps = {
-    onSubmit: (submitForm: AddRemainderFormData) => {}
 }
 
 export const RemainderList = ({ remainders, refreshRemainder }: { remainders: AddRemainderFormData[], refreshRemainder: () => {} }) => {
