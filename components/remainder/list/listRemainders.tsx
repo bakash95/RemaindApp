@@ -8,8 +8,8 @@ import { Button } from 'react-native-paper'
 import { addRemainderStyles as styles } from '../addRemainders.styles'
 
 import i18n from 'i18n-js'
-import moment from 'moment'
 import Swipeable from "react-native-gesture-handler/Swipeable";
+import { getFormattedDateTime } from "../../../helpers/dateTimeHelper";
 
 export const RemainderList = ({ remainders, refreshRemainder }: { remainders: AddRemainderFormData[], refreshRemainder: () => {} }) => {
     let [loading, setLoading] = useState<boolean>(false);
@@ -48,7 +48,7 @@ export const RemainderList = ({ remainders, refreshRemainder }: { remainders: Ad
                                 </View> :
                                 <View>
                                     <Text style={styles.cardContentStyle}>{i18n.t('repeat')} {item.repeat}</Text>
-                                    <Text>{i18n.t('time')} {moment(item.time).format('llll')}</Text>
+                                    <Text>{i18n.t('time')} {getFormattedDateTime(item.time, { timeStyle: 'long' })}</Text>
                                 </View>
                         }
                     </Card.Content>

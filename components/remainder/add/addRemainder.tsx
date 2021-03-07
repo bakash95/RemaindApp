@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React, { useState, useCallback } from "react";
 import { View, Modal, Text, TouchableOpacity } from "react-native";
 import { DatePicker, TimePicker, SelectField, TextInputComp } from "../../common";
@@ -6,9 +5,10 @@ import { addRemainderToStorage } from "../remainder.storage";
 import { AddRemainderFormData, repeat, frequency, AddRemainderProps, repeatationOptions, frequencyOptions, minuteOptions, hoursOption } from "../remainder.types";
 
 import i18n from 'i18n-js'
-import moment from 'moment'
 
 import { addRemainderStyles as styles } from '../addRemainders.styles';
+import { getFormattedDateTime } from "../../../helpers/dateTimeHelper";
+import { IconButton } from "react-native-paper";
 
 export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} }) => {
     const [isAddModalOpen, setAddModalOpen] = useState<boolean>(false);
@@ -26,10 +26,13 @@ export const AddRemainder = ({ refreshRemainder }: { refreshRemainder: () => {} 
                 style={styles.modalStyles}
                 visible={isAddModalOpen}
                 onRequestClose={setModalClose}>
-                <Ionicons style={styles.addBtn} name="close" size={24} onPress={setModalClose} color="black" />
+                <IconButton icon="close"
+                    size={30} onPress={setModalClose} color="black" />
                 <RemainderComp onSubmit={submitRemainder} />
             </Modal>
-            <Ionicons style={styles.addBtn} name="add-circle-outline" size={60} onPress={setModalClose} color="green" />
+            <IconButton
+                icon="plus-circle" size={70}
+                onPress={setModalClose} color="green" />
         </View>
     )
 }
@@ -59,15 +62,15 @@ const RemainderComp = (props: AddRemainderProps) => {
                                 value={freqNumber} onValueChange={(value, index) => setFreqNumber(value)} />
                             {
                                 frequencyValue == frequency.days ?
-                                <View style={[styles.customDateContainer]}>
-                                    <Text style={[styles.centerText]}>{moment(time).format('hh:mm:ss A')}</Text>
-                                    <TimePicker value={time} setTime={setTime} />
-                                </View> : null
+                                    <View style={[styles.customDateContainer]}>
+                                        <Text style={[styles.centerText]}>{getFormattedDateTime(time, 'HH:mm:ss a')}</Text>
+                                        <TimePicker value={time} setTime={setTime} />
+                                    </View> : null
                             }
                         </View> :
                         repatation == repeat.ONE_TIME ?
                             <View style={[styles.customDateContainer]}>
-                                <Text style={[styles.centerText]}>{moment(time).format('llll')}</Text>
+                                <Text style={[styles.centerText]}>{getFormattedDateTime(time)}</Text>
                                 <DatePicker value={time} setTime={setTime} />
                                 <TimePicker value={time} setTime={setTime} />
                             </View> :
