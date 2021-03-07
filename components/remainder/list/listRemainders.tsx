@@ -1,10 +1,8 @@
 import { deleteRemainderInStorageForId } from "../remainder.storage";
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { ActivityIndicator, Card, Colors, IconButton } from "react-native-paper";
 import { AddRemainderFormData, repeat, frequency } from "../remainder.types";
 import { FlatList, View, Text, StyleSheet } from "react-native";
-import { Button } from 'react-native-paper'
-
 import { addRemainderStyles as styles } from '../addRemainders.styles'
 
 import i18n from 'i18n-js'
@@ -26,13 +24,13 @@ export const RemainderList = ({ remainders, refreshRemainder }: { remainders: Ad
 
     return (
         <FlatList data={remainders} renderItem={({ item }: { item: AddRemainderFormData }) =>
-            <Swipeable renderRightActions={() => {
-                return <IconButton style={btnStyles.deleteBtn}
-                    color={Colors.red600}
-                    icon="delete"
-                    onPress={() => { onDelete(item.key) }} />
-            }}>
-                <Card key={item.key}>
+            <View key={item.key} style={btnStyles.remainderItemStyles}>
+                <Swipeable renderRightActions={() => {
+                    return <IconButton style={btnStyles.deleteBtn}
+                        color={Colors.red600}
+                        icon="delete"
+                        onPress={() => { onDelete(item.key) }} />
+                }}>
                     <Card.Title subtitle={item.repeat == repeat.EVERY ?
                         i18n.t('remainder') : item.repeat == repeat.TIMER ? i18n.t('timer') :
                             i18n.t('alarm')}
@@ -52,8 +50,8 @@ export const RemainderList = ({ remainders, refreshRemainder }: { remainders: Ad
                                 </View>
                         }
                     </Card.Content>
-                </Card>
-            </Swipeable>
+                </Swipeable>
+            </View>
         } />
     )
 }
@@ -62,5 +60,6 @@ const btnStyles = StyleSheet.create({
     deleteBtn: {
         marginLeft: 10,
         alignSelf: 'center'
-    }
+    },
+    remainderItemStyles: { marginBottom: 20, paddingBottom: 30, borderBottomColor: Colors.green500, borderBottomWidth: 2 }
 })
